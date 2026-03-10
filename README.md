@@ -5,7 +5,7 @@ Next.js rebuild of the original Houdini idea-to-VEX spike.
 Core loop:
 
 - prompt in
-- Pollinations Claude or local heuristic fallback
+- Pollinations model chain or local heuristic fallback
 - Houdini-ready VEX out
 - extracted artist controls as sliders
 
@@ -32,9 +32,16 @@ Optional `.env.local`:
 
 ```bash
 POLLEN_API_KEY=
+POLLEN_MODEL=qwen-coder
+POLLEN_FALLBACK_MODELS=gemini-fast,openai-fast,mistral
 ```
 
 Without `POLLEN_API_KEY`, the app falls back to the local heuristic generator.
+
+Default model strategy for VEX generation:
+
+- primary: `qwen-coder`
+- fallbacks: `gemini-fast`, `openai-fast`, `mistral`
 
 You can also connect a Pollinations key directly in the browser:
 

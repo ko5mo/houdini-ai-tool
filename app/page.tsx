@@ -94,7 +94,7 @@ export default function HomePage() {
             transition={loading ? { repeat: Number.POSITIVE_INFINITY, duration: 1.2 } : { duration: 0.2 }}
             className="rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-400"
           >
-            {loading ? "Generating Houdini-ready VEX..." : "Claude via Pollinations or heuristic fallback"}
+            {loading ? "Generating Houdini-ready VEX..." : "qwen-coder with model fallback or local heuristic"}
           </motion.div>
         </div>
 

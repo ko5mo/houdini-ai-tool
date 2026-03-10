@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+const DEFAULT_MODEL_CHAIN = ["qwen-coder", "gemini-fast", "openai-fast", "mistral"] as const;
+
 function extractMessageText(content: unknown) {
   if (typeof content === "string") {
     return content;
@@ -54,11 +56,17 @@ async function getSystemPrompt() {
   return cachedSystemPrompt;
 }
 
-export async function callPollinations(prompt: string, apiKey: string) {
-  if (!apiKey.trim()) {
-    throw new Error("Missing Pollinations API key.");
-  }
+function getModelChain() {
+  const preferred = process.env.POLLEN_MODEL?.trim();
+  const extraFallbacks = (process.env.POLLEN_FALLBACK_MODELS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 
+  return [...new Set([preferred, ...extraFallbacks, ...DEFAULT_MODEL_CHAIN].filter((value): value is string => Boolean(value)))];
+}
+
+async function requestModel(prompt: string, apiKey: string, model: string) {
   const systemPrompt = await getSystemPrompt();
   const response = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
     method: "POST",
@@ -67,7 +75,7 @@ export async function callPollinations(prompt: string, apiKey: string) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "claude",
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: prompt },
@@ -79,7 +87,9 @@ export async function callPollinations(prompt: string, apiKey: string) {
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(`Pollinations request failed: ${response.status} ${detail}`);
+    const error = new Error(`Pollinations request failed for ${model}: ${response.status} ${detail}`);
+    (error as Error & { status?: number }).status = response.status;
+    throw error;
   }
 
   const json = (await response.json()) as {
@@ -88,8 +98,35 @@ export async function callPollinations(prompt: string, apiKey: string) {
 
   const content = extractMessageText(json.choices?.[0]?.message?.content);
   if (!content.trim()) {
-    throw new Error("Pollinations returned an empty message.");
+    throw new Error(`Pollinations returned an empty message for ${model}.`);
   }
 
   return extractJsonObject(content);
+}
+
+export async function callPollinations(prompt: string, apiKey: string) {
+  if (!apiKey.trim()) {
+    throw new Error("Missing Pollinations API key.");
+  }
+
+  const models = getModelChain();
+  const failures: string[] = [];
+
+  for (const model of models) {
+    try {
+      return await requestModel(prompt, apiKey, model);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Unknown failure for ${model}.`;
+      const status = error instanceof Error && "status" in error ? Number((error as Error & { status?: number }).status) : undefined;
+
+      // Auth errors will not improve by trying a different model.
+      if (status === 401 || status === 403) {
+        throw new Error(message);
+      }
+
+      failures.push(message);
+    }
+  }
+
+  throw new Error(failures.join(" | "));
 }
