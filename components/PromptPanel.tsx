@@ -2,6 +2,7 @@
 
 import { Sparkles } from "lucide-react";
 import { PollenKeyPanel } from "@/components/PollenKeyPanel";
+import { DEFAULT_MODEL_ID, RECOMMENDED_MODEL_OPTIONS } from "@/lib/model-options";
 import type { VexResult } from "@/lib/types";
 import { prettyClass, prettyLabel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,8 @@ interface PromptPanelProps {
   loading: boolean;
   result: VexResult | null;
   examples: string[];
+  selectedModel: string;
+  onModelChange: (value: string) => void;
   onPromptChange: (value: string) => void;
   onSubmit: () => void;
   onExampleClick: (value: string) => void;
@@ -24,10 +27,17 @@ export function PromptPanel({
   loading,
   result,
   examples,
+  selectedModel,
+  onModelChange,
   onPromptChange,
   onSubmit,
   onExampleClick,
 }: PromptPanelProps) {
+  const activeModel =
+    RECOMMENDED_MODEL_OPTIONS.find((model) => model.id === selectedModel) ??
+    RECOMMENDED_MODEL_OPTIONS.find((model) => model.id === DEFAULT_MODEL_ID) ??
+    RECOMMENDED_MODEL_OPTIONS[0];
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -71,6 +81,29 @@ export function PromptPanel({
                 {example}
               </button>
             ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Model</p>
+            <span className="text-xs text-zinc-500">Recommended set</span>
+          </div>
+          <div className="space-y-2">
+            <select
+              value={selectedModel}
+              onChange={(event) => onModelChange(event.target.value)}
+              className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-accent/50"
+            >
+              {RECOMMENDED_MODEL_OPTIONS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs leading-5 text-zinc-500">{activeModel.note}</p>
           </div>
         </div>
 

@@ -1,11 +1,12 @@
 "use client";
 
-import { startTransition, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CodePanel } from "@/components/CodePanel";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { ParamsPanel } from "@/components/ParamsPanel";
 import { PromptPanel } from "@/components/PromptPanel";
+import { DEFAULT_MODEL_ID, RECOMMENDED_MODEL_OPTIONS } from "@/lib/model-options";
 import { getPollenHeaders } from "@/lib/pollen-key";
 import type { ParamMap, ParameterValue, VexResult } from "@/lib/types";
 import { getDefaultParamMap } from "@/lib/utils";
@@ -18,12 +19,32 @@ const EXAMPLES = [
 ];
 
 export default function HomePage() {
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
   const [prompt, setPrompt] = useState(
     "Build me a point wrangle that creates an organic mask over the surface using height and noise, with controls for frequency, contrast, and displacement strength."
   );
   const [result, setResult] = useState<VexResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [params, setParams] = useState<ParamMap>({});
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("preferredPollenModel");
+      if (stored && RECOMMENDED_MODEL_OPTIONS.some((model) => model.id === stored)) {
+        setSelectedModel(stored);
+      }
+    } catch {
+      // Ignore storage access issues.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("preferredPollenModel", selectedModel);
+    } catch {
+      // Ignore storage access issues.
+    }
+  }, [selectedModel]);
 
   async function generate(nextPrompt?: string) {
     const activePrompt = (nextPrompt ?? prompt).trim();
@@ -40,7 +61,7 @@ export default function HomePage() {
           "Content-Type": "application/json",
           ...getPollenHeaders(),
         },
-        body: JSON.stringify({ prompt: activePrompt }),
+        body: JSON.stringify({ prompt: activePrompt, preferredModel: selectedModel }),
       });
 
       const payload = (await response.json()) as VexResult | { error: string };
@@ -94,7 +115,7 @@ export default function HomePage() {
             transition={loading ? { repeat: Number.POSITIVE_INFINITY, duration: 1.2 } : { duration: 0.2 }}
             className="rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-400"
           >
-            {loading ? "Generating Houdini-ready VEX..." : "qwen-coder with model fallback or local heuristic"}
+            {loading ? "Generating Houdini-ready VEX..." : `${selectedModel} with fallback chain or local heuristic`}
           </motion.div>
         </div>
 
@@ -104,6 +125,8 @@ export default function HomePage() {
             loading={loading}
             result={result}
             examples={EXAMPLES}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
             onPromptChange={setPrompt}
             onSubmit={() => void generate()}
             onExampleClick={(value) => {

@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-
-const DEFAULT_MODEL_CHAIN = ["qwen-coder", "gemini-fast", "openai-fast", "mistral"] as const;
+import { buildModelChain } from "@/lib/model-options";
 
 function extractMessageText(content: unknown) {
   if (typeof content === "string") {
@@ -56,16 +55,6 @@ async function getSystemPrompt() {
   return cachedSystemPrompt;
 }
 
-function getModelChain() {
-  const preferred = process.env.POLLEN_MODEL?.trim();
-  const extraFallbacks = (process.env.POLLEN_FALLBACK_MODELS || "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  return [...new Set([preferred, ...extraFallbacks, ...DEFAULT_MODEL_CHAIN].filter((value): value is string => Boolean(value)))];
-}
-
 async function requestModel(prompt: string, apiKey: string, model: string) {
   const systemPrompt = await getSystemPrompt();
   const response = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
@@ -104,12 +93,12 @@ async function requestModel(prompt: string, apiKey: string, model: string) {
   return extractJsonObject(content);
 }
 
-export async function callPollinations(prompt: string, apiKey: string) {
+export async function callPollinations(prompt: string, apiKey: string, preferredModel?: string) {
   if (!apiKey.trim()) {
     throw new Error("Missing Pollinations API key.");
   }
 
-  const models = getModelChain();
+  const models = buildModelChain(preferredModel);
   const failures: string[] = [];
 
   for (const model of models) {

@@ -6,8 +6,9 @@ import { resolvePollenKey } from "@/lib/resolve-pollen-key";
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { prompt?: string };
+    const body = (await request.json()) as { prompt?: string; preferredModel?: string };
     const prompt = body.prompt?.trim() || "";
+    const preferredModel = body.preferredModel?.trim() || undefined;
 
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required." }, { status: 400 });
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      const raw = await callPollinations(prompt, apiKey);
+      const raw = await callPollinations(prompt, apiKey, preferredModel);
       return NextResponse.json(normalizeModelResult(raw, prompt));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown model error.";

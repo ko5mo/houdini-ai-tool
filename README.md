@@ -43,6 +43,9 @@ Default model strategy for VEX generation:
 - primary: `qwen-coder`
 - fallbacks: `gemini-fast`, `openai-fast`, `mistral`
 
+The UI now exposes the recommended models in a dropdown so you can switch and compare behavior.
+The selected model is remembered in the browser and sent to `/api/generate` as the preferred model, while the server still keeps a fallback chain behind it.
+
 You can also connect a Pollinations key directly in the browser:
 
 - `Connect with Pollinations` uses the OAuth redirect flow
