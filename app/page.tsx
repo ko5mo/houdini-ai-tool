@@ -178,7 +178,7 @@ export default function HomePage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">Idea to VEX</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-50">Prompt in. VEX out. Sliders extracted.</h1>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-50">Houdini AI VEX Helper</h1>
           </div>
           <motion.div
             animate={loading ? { opacity: [0.5, 1, 0.5] } : { opacity: 1 }}
