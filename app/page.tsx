@@ -189,7 +189,7 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        <div className="grid min-h-[calc(100vh-7.5rem)] grid-cols-1 gap-4 xl:grid-cols-[1fr_1.5fr_1fr]">
+        <div className="grid min-h-[calc(100vh-7.5rem)] grid-cols-1 gap-4 xl:grid-cols-[3fr_5fr_2fr]">
           <PromptPanel
             prompt={prompt}
             contextText={contextText}
