@@ -4,11 +4,10 @@ import { startTransition, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CodePanel } from "@/components/CodePanel";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
-import { ParamsPanel } from "@/components/ParamsPanel";
 import { PromptPanel } from "@/components/PromptPanel";
 import { DEFAULT_MODEL_ID, RECOMMENDED_MODEL_OPTIONS } from "@/lib/model-options";
 import { getPollenHeaders } from "@/lib/pollen-key";
-import type { ParamMap, ParameterValue, TaskMode, VexResult } from "@/lib/types";
+import type { ParamMap, TaskMode, VexResult } from "@/lib/types";
 import { prettyMode } from "@/lib/utils";
 import { getDefaultParamMap } from "@/lib/utils";
 
@@ -172,12 +171,6 @@ export default function HomePage() {
     }
   }
 
-  function handleParamChange(name: string, value: ParameterValue) {
-    setParams((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  }
 
   return (
     <main className="min-h-screen bg-zinc-950 p-4 text-zinc-100">
@@ -219,8 +212,7 @@ export default function HomePage() {
             }}
           />
 
-          <div className="grid min-h-[640px] grid-rows-[minmax(260px,0.9fr)_minmax(320px,1.1fr)] gap-4">
-            <ParamsPanel result={result} params={params} onParamChange={handleParamChange} />
+          <div className="min-h-[640px]">
             <CodePanel prompt={prompt} result={result} params={params} />
           </div>
 
